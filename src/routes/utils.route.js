@@ -1,0 +1,257 @@
+import { Router } from "express";
+import UtilsController from "../controllers/utils.controller.js";
+import { utilsService } from "../services/index.js";
+import { userPassJwt } from "../middlewares/userPassJwt.js";
+import { handlePolicies } from "../middlewares/handlePolicies.js";
+
+const utilsController = new UtilsController(utilsService);
+
+const router = Router();
+
+router.get(
+	"/notifications",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getAdminNotifications,
+);
+router.get(
+	"/fees",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getFees,
+);
+router.post(
+	"/updatefees",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.updateFees,
+);
+
+router.put(
+	"/openclosefeatures/:fid/:pos",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.openCloseFeatures,
+);
+router.get(
+	"/openclosefeatures",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getPositionFeatures,
+);
+
+router.post(
+	"/expenditures",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.newExpenditures,
+);
+router.post(
+	"/income",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.newIncome,
+);
+
+router.get(
+	"/dailyinscriptions/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyInscriptions,
+);
+router.get(
+	"/dailyclub/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getDailyClub,
+);
+router.get(
+	"/dailymonthly/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyMonthly,
+);
+router.get(
+	"/dailyannual/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyAnnual,
+);
+router.get(
+	"/dailyrequests/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyRequests,
+);
+router.get(
+	"/dailyexpenditures/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyExpenditures,
+);
+router.get(
+	"/dailyincome/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyIncome,
+);
+
+router.get(
+	"/dailyclubelectronic/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getDailyClubElectronic,
+);
+router.get(
+	"/dailymonthlyelectronic/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyMonthlyElectronic,
+);
+router.get(
+	"/dailyannualelectronic/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyAnnualElectronic,
+);
+router.get(
+	"/dailyrequestselectronic/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyRequestsElectronic,
+);
+router.get(
+	"/dailyexpenditureselectronic/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyExpendituresElectronic,
+);
+router.get(
+	"/dailyincomeelectronic/:day",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.dailyIncomeElectronic,
+);
+
+router.get(
+	"/monthlyinscriptions/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyInscriptions,
+);
+
+router.get(
+	"/monthlyclub/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyClub,
+);
+router.get(
+	"/monthly/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthly,
+);
+router.get(
+	"/monthlyannual/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyAnnual,
+);
+router.get(
+	"/monthlyrequests/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyRequests,
+);
+router.get(
+	"/monthlyexpenditures/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getExpenditures,
+);
+router.get(
+	"/monthlyincome/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getIncome,
+);
+router.get(
+	"/getmonthgridinfo/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getMonthGridInfo,
+);
+
+router.get(
+	"/monthlyclubelectronic/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyClubElectronic,
+);
+router.get(
+	"/monthlyelectronic/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyElectronic,
+);
+router.get(
+	"/monthlyannualelectronic/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyAnnualElectronic,
+);
+router.get(
+	"/monthlyrequestselectronic/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.monthlyRequestsElectronic,
+);
+router.get(
+	"/monthlyexpenditureselectronic/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getExpendituresElectronic,
+);
+router.get(
+	"/monthlyincomeelectronic/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getIncomeElectronic,
+);
+router.get(
+	"/getmonthgridinfoelectronic/:month",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getMonthGridInfoElectronic,
+);
+
+router.get(
+	"/getproducts",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.getProducts,
+);
+
+router.post(
+	"/updateprice",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.updateProductPrice,
+);
+
+router.post(
+	"/newproduct",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.newProduct,
+);
+
+router.delete(
+	"/deleteproduct/:pid",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	utilsController.deleteProduct,
+);
+
+export default router;
