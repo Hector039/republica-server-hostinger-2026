@@ -198,6 +198,7 @@ export default class MothlyPaymentsController {
 				year,
 				payDate,
 				isLinked,
+				isElectronic,
 			);
 			res.status(200).send(newLinkedPayment);
 		} catch (error) {

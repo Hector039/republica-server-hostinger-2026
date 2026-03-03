@@ -26,6 +26,7 @@ export default class MonthlyPaymentsService {
 				year,
 				payDate,
 				isLinked,
+				isElectronic,
 			);
 			return payment;
 		} catch (error) {
