@@ -616,6 +616,8 @@ FROM (
 		try {
 			const sql = "DELETE FROM `products` WHERE id_product = ?";
 			await this.database.execute(sql, [pid]);
+			const sql2 = "DELETE FROM `merch_requests` WHERE req_description = ?";
+			await this.database.execute(sql2, [pid]);
 			return;
 		} catch (err) {
 			throw err;
