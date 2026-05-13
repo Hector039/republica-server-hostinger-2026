@@ -4,270 +4,402 @@ export default class UsersRepository {
 	}
 
 	getUsers = async (search, value) => {
-		const sql = `SELECT 
+		const sqlModified = `SELECT 
                         u.id_user, 
                         u.first_name, 
                         u.last_name, 
                         u.dni, 
-                        u.register_date, 
-                        u.user_status, 
                         f.fee_descr,
                         f.amount AS fee_month,
                         (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
-                        
-                        -- Última cuota mensual impaga
-                        mp.year_paid AS last_unpaid_month_year,
-                        mp.month_paid AS last_unpaid_month,
-                        mp.amount AS last_unpaid_month_amount,
-                        
-                        -- Último pago anual impago
-                        ap.year_paid AS last_unpaid_year,
-                        ap.amount AS last_unpaid_amount
+
+                        -- Datos del último pago mensual incompleto
+                        m.amount AS last_unpaid_month_amount,
+                        m.month_paid AS month_paid,
+                        m.year_paid AS year_paid,
+
+                        -- Datos del último pago anual incompleto
+                        a.amount AS annual_pending_amount,
+                        a.year_paid AS annual_pending_year
 
                     FROM users u
-                    JOIN fees f ON u.id_fee = f.id_fee
+                    INNER JOIN fees f ON u.id_fee = f.id_fee
 
-                    -- Unión con pagos mensuales
-                    LEFT JOIN monthly_payments mp 
-                        ON u.id_user = mp.id_user 
-                        AND mp.is_complete = 0
-                        AND (mp.year_paid, mp.month_paid) = (
-                            SELECT mp2.year_paid, mp2.month_paid
-                            FROM monthly_payments mp2
-                            WHERE mp2.id_user = u.id_user 
-                            AND mp2.is_complete = 0
-                            ORDER BY mp2.year_paid DESC, mp2.month_paid DESC
-                            LIMIT 1
+                    -- Join para el último pago mensual incompleto
+                    LEFT JOIN (
+                        SELECT m1.*
+                        FROM monthly_payments m1
+                        WHERE m1.is_complete = 0
+                        AND m1.id_payment = (
+                            SELECT MAX(m2.id_payment) 
+                            FROM monthly_payments m2 
+                            WHERE m2.id_user = m1.id_user AND m2.is_complete = 0
                         )
-
-                    -- Unión con pagos anuales
-                    LEFT JOIN annual_payments ap 
-                        ON u.id_user = ap.id_user 
-                        AND ap.is_complete = 0
-                        AND ap.year_paid = (
-                            SELECT MAX(ap2.year_paid)
-                            FROM annual_payments ap2
-                            WHERE ap2.id_user = u.id_user 
-                            AND ap2.is_complete = 0
+                    ) m ON u.id_user = m.id_user
+                    
+                    -- Join para el último pago anual incompleto
+                    LEFT JOIN (
+                        SELECT a1.*
+                        FROM annual_payments a1
+                        WHERE a1.is_complete = 0
+                        AND a1.id_payment = (
+                            SELECT MAX(a2.id_payment) 
+                            FROM annual_payments a2 
+                            WHERE a2.id_user = a1.id_user AND a2.is_complete = 0
                         )
-                    WHERE u.user_status = 1`;
+                    ) a ON u.id_user = a.id_user
+                    WHERE u.user_status = true;`;
 
 		try {
-			if (search === "TODO") {
-				const [rows, fields] = await this.database.execute(sql);
-				return rows;
-			} else if (!value) {
-				const [rows, fields] = await this.database.execute(sql);
+			if (search === "TODO" || !value) {
+				const [rows, fields] = await this.database.execute(sqlModified);
 				return rows;
 			} else if (value === "0" && search === "user_status") {
-				const sql2 = `SELECT 
+				const sqlModified = `SELECT 
                         u.id_user, 
                         u.first_name, 
                         u.last_name, 
                         u.dni, 
-                        u.register_date, 
-                        u.user_status, 
                         f.fee_descr,
                         f.amount AS fee_month,
                         (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
-                        
-                        -- Última cuota mensual impaga
-                        mp.year_paid AS last_unpaid_month_year,
-                        mp.month_paid AS last_unpaid_month,
-                        mp.amount AS last_unpaid_month_amount,
-                        
-                        -- Último pago anual impago
-                        ap.year_paid AS last_unpaid_year,
-                        ap.amount AS last_unpaid_amount
+
+                        -- Datos del último pago mensual incompleto
+                        m.amount AS last_unpaid_month_amount,
+                        m.month_paid AS month_paid,
+                        m.year_paid AS year_paid,
+
+                        -- Datos del último pago anual incompleto
+                        a.amount AS annual_pending_amount,
+                        a.year_paid AS annual_pending_year
 
                     FROM users u
-                    JOIN fees f ON u.id_fee = f.id_fee
+                    INNER JOIN fees f ON u.id_fee = f.id_fee
 
-                    -- Unión con pagos mensuales
-                    LEFT JOIN monthly_payments mp 
-                        ON u.id_user = mp.id_user 
-                        AND mp.is_complete = 0
-                        AND (mp.year_paid, mp.month_paid) = (
-                            SELECT mp2.year_paid, mp2.month_paid
-                            FROM monthly_payments mp2
-                            WHERE mp2.id_user = u.id_user 
-                            AND mp2.is_complete = 0
-                            ORDER BY mp2.year_paid DESC, mp2.month_paid DESC
-                            LIMIT 1
+                    -- Join para el último pago mensual incompleto
+                    LEFT JOIN (
+                        SELECT m1.*
+                        FROM monthly_payments m1
+                        WHERE m1.is_complete = 0
+                        AND m1.id_payment = (
+                            SELECT MAX(m2.id_payment) 
+                            FROM monthly_payments m2 
+                            WHERE m2.id_user = m1.id_user AND m2.is_complete = 0
                         )
+                    ) m ON u.id_user = m.id_user
+                    
+                    -- Join para el último pago anual incompleto
+                    LEFT JOIN (
+                        SELECT a1.*
+                        FROM annual_payments a1
+                        WHERE a1.is_complete = 0
+                        AND a1.id_payment = (
+                            SELECT MAX(a2.id_payment) 
+                            FROM annual_payments a2 
+                            WHERE a2.id_user = a1.id_user AND a2.is_complete = 0
+                        )
+                    ) a ON u.id_user = a.id_user
+                    WHERE u.user_status = false;`;
 
-                    -- Unión con pagos anuales
-                    LEFT JOIN annual_payments ap 
-                        ON u.id_user = ap.id_user 
-                        AND ap.is_complete = 0
-                        AND ap.year_paid = (
-                            SELECT MAX(ap2.year_paid)
-                            FROM annual_payments ap2
-                            WHERE ap2.id_user = u.id_user 
-                            AND ap2.is_complete = 0
-                        )
-                    WHERE u.user_status = 0`;
-				const [rows, fields] = await this.database.execute(sql2);
+				const [rows, fields] = await this.database.execute(sqlModified);
 				return rows;
-			} else if (search === "monthly_pay_date") {
-				const sql3 = `SELECT 
-                            u.id_user, 
-                            u.first_name, 
-                            u.last_name, 
-                            u.dni, 
-                            u.register_date, 
-                            u.user_status, 
-                            f.fee_descr,
-                            f.amount AS fee_month,
-                            (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
+			} else if (search === "monthly_pay_date_cash") {
+				const sqlDateModified = `SELECT 
+                                    u.id_user, 
+                                    u.first_name, 
+                                    u.last_name, 
+                                    u.dni, 
+                                    f.fee_descr,
+                                    f.amount AS fee_month,
+                                    (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
 
-                            -- Última cuota mensual impaga
-                            mp.year_paid AS last_unpaid_month_year,
-                            mp.month_paid AS last_unpaid_month,
-                            mp.amount AS last_unpaid_month_amount,
+                                    -- Datos del último pago mensual incompleto
+                                    m.amount AS last_unpaid_month_amount,
+                                    m.month_paid AS month_paid,
+                                    m.year_paid AS year_paid,
 
-                            -- Último pago anual impago
-                            ap.year_paid AS last_unpaid_year,
-                            ap.amount AS last_unpaid_amount
+                                    -- Datos del último pago anual incompleto
+                                    a.amount AS annual_pending_amount,
+                                    a.year_paid AS annual_pending_year
 
-                        FROM users u
-                        JOIN fees f ON u.id_fee = f.id_fee
+                                FROM users u
+                                INNER JOIN fees f ON u.id_fee = f.id_fee
 
-                        -- Pagos mensuales pendientes
-                        LEFT JOIN monthly_payments mp 
-                            ON u.id_user = mp.id_user 
-                            
-                            AND (mp.year_paid, mp.month_paid) = (
-                                SELECT mp2.year_paid, mp2.month_paid
-                                FROM monthly_payments mp2
-                                WHERE mp2.id_user = u.id_user
-                                ORDER BY mp2.year_paid DESC, mp2.month_paid DESC
-                                LIMIT 1
-                            )
+                                -- Filtramos por los usuarios que pagaron en la fecha y método específico
+                                INNER JOIN (
+                                    SELECT id_user
+                                    FROM (
+                                        SELECT mph.id_payment, mp.id_user 
+                                        FROM monthly_payments_history mph
+                                        JOIN monthly_payments mp ON mph.id_payment = mp.id_payment
+                                        WHERE mph.pay_date = '${value}' AND mph.is_electronic = false
+                                        ORDER BY mph.id_monthly_payment DESC
+                                    ) AS sub_pagos
+                                    GROUP BY id_user -- Evita usuarios repetidos si pagaron varias veces el mismo día
+                                ) pagos_dia ON u.id_user = pagos_dia.id_user
+                                
+                                -- Buscamos el último registro mensual incompleto
+                                LEFT JOIN (
+                                    SELECT m1.*
+                                    FROM monthly_payments m1
+                                    WHERE m1.is_complete = 0
+                                    AND m1.id_payment = (
+                                        SELECT MAX(m2.id_payment) 
+                                        FROM monthly_payments m2 
+                                        WHERE m2.id_user = m1.id_user AND m2.is_complete = 0
+                                    )
+                                ) m ON u.id_user = m.id_user
+                                
+                                -- Buscamos el último registro anual incompleto
+                                LEFT JOIN (
+                                    SELECT a1.*
+                                    FROM annual_payments a1
+                                    WHERE a1.is_complete = 0
+                                    AND a1.id_payment = (
+                                        SELECT MAX(a2.id_payment) 
+                                        FROM annual_payments a2 
+                                        WHERE a2.id_user = a1.id_user AND a2.is_complete = 0
+                                    )
+                                ) a ON u.id_user = a.id_user
+                                WHERE u.user_status = true;`;
 
-                        -- Pagos anuales pendientes
-                        LEFT JOIN annual_payments ap 
-                            ON u.id_user = ap.id_user
-                            AND ap.year_paid = (
-                                SELECT MAX(ap2.year_paid)
-                                FROM annual_payments ap2
-                                WHERE ap2.id_user = u.id_user
-                            )
-
-                        -- JOIN con historial de pagos mensuales (fecha de pago real)
-                        INNER JOIN monthly_payments_history mph 
-                            ON mph.id_payment = mp.id_payment
-                            AND mph.pay_date = '${value}'
-
-                        WHERE u.user_status = 1`;
-
-				const [rows, fields] = await this.database.execute(sql3);
+				const [rows, fields] = await this.database.execute(sqlDateModified);
 				return rows;
-			} else if (search === "annual_pay_date") {
-				const sql4 = `SELECT 
-                        u.id_user, 
-                        u.first_name, 
-                        u.last_name, 
-                        u.dni, 
-                        u.register_date, 
-                        u.user_status, 
-                        f.fee_descr,
-                        f.amount AS fee_month,
-                        (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
-                        
-                        -- Última cuota mensual impaga
-                        mp.year_paid AS last_unpaid_month_year,
-                        mp.month_paid AS last_unpaid_month,
-                        mp.amount AS last_unpaid_month_amount,
-                        
-                        -- Último pago anual impago
-                        ap.year_paid AS last_unpaid_year,
-                        ap.amount AS last_unpaid_amount
+			} else if (search === "monthly_pay_date_electronic") {
+				const sqlDateModified = `SELECT 
+                                    u.id_user, 
+                                    u.first_name, 
+                                    u.last_name, 
+                                    u.dni, 
+                                    f.fee_descr,
+                                    f.amount AS fee_month,
+                                    (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
 
-                    FROM users u
-                    JOIN fees f ON u.id_fee = f.id_fee
+                                    -- Datos del último pago mensual incompleto
+                                    m.amount AS last_unpaid_month_amount,
+                                    m.month_paid AS month_paid,
+                                    m.year_paid AS year_paid,
 
-                    -- Unión con pagos mensuales
-                    LEFT JOIN monthly_payments mp 
-                        ON u.id_user = mp.id_user
-                        AND (mp.year_paid, mp.month_paid) = (
-                            SELECT mp2.year_paid, mp2.month_paid
-                            FROM monthly_payments mp2
-                            WHERE mp2.id_user = u.id_user
-                            ORDER BY mp2.year_paid DESC, mp2.month_paid DESC
-                            LIMIT 1
-                        )
+                                    -- Datos del último pago anual incompleto
+                                    a.amount AS annual_pending_amount,
+                                    a.year_paid AS annual_pending_year
 
-                    -- Unión con pagos anuales
-                    LEFT JOIN annual_payments ap 
-                        ON u.id_user = ap.id_user
-                        AND ap.year_paid = (
-                            SELECT MAX(ap2.year_paid)
-                            FROM annual_payments ap2
-                            WHERE ap2.id_user = u.id_user
-                        )
+                                FROM users u
+                                INNER JOIN fees f ON u.id_fee = f.id_fee
 
-                        -- JOIN con historial de pagos anuales (fecha de pago real)
-                        INNER JOIN annual_payments_history aph 
-                            ON aph.id_payment = ap.id_payment
-                            AND aph.pay_date = '${value}'
+                                -- Filtramos por los usuarios que pagaron en la fecha y método específico
+                                INNER JOIN (
+                                    SELECT id_user
+                                    FROM (
+                                        SELECT mph.id_payment, mp.id_user 
+                                        FROM monthly_payments_history mph
+                                        JOIN monthly_payments mp ON mph.id_payment = mp.id_payment
+                                        WHERE mph.pay_date = '${value}' AND mph.is_electronic = true
+                                        ORDER BY mph.id_monthly_payment DESC
+                                    ) AS sub_pagos
+                                    GROUP BY id_user -- Evita usuarios repetidos si pagaron varias veces el mismo día
+                                ) pagos_dia ON u.id_user = pagos_dia.id_user
+                                
+                                -- Buscamos el último registro mensual incompleto
+                                LEFT JOIN (
+                                    SELECT m1.*
+                                    FROM monthly_payments m1
+                                    WHERE m1.is_complete = 0
+                                    AND m1.id_payment = (
+                                        SELECT MAX(m2.id_payment) 
+                                        FROM monthly_payments m2 
+                                        WHERE m2.id_user = m1.id_user AND m2.is_complete = 0
+                                    )
+                                ) m ON u.id_user = m.id_user
+                                
+                                -- Buscamos el último registro anual incompleto
+                                LEFT JOIN (
+                                    SELECT a1.*
+                                    FROM annual_payments a1
+                                    WHERE a1.is_complete = 0
+                                    AND a1.id_payment = (
+                                        SELECT MAX(a2.id_payment) 
+                                        FROM annual_payments a2 
+                                        WHERE a2.id_user = a1.id_user AND a2.is_complete = 0
+                                    )
+                                ) a ON u.id_user = a.id_user
+                                WHERE u.user_status = true;`;
 
-                    WHERE u.user_status = 1`;
+				const [rows, fields] = await this.database.execute(sqlDateModified);
+				return rows;
+			} else if (search === "annual_pay_date_cash") {
+				const sqlAnnualDateModified = `SELECT 
+                                                u.id_user, 
+                                                u.first_name, 
+                                                u.last_name, 
+                                                u.dni, 
+                                                f.fee_descr,
+                                                f.amount AS fee_month,
+                                                (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
 
-				const [rows, fields] = await this.database.execute(sql4);
+                                                -- Datos del último pago mensual incompleto
+                                                m.amount AS last_unpaid_month_amount,
+                                                m.month_paid AS month_paid,
+                                                m.year_paid AS year_paid,
+
+                                                -- Datos del último pago anual incompleto
+                                                a.amount AS annual_pending_amount,
+                                                a.year_paid AS annual_pending_year
+
+                                            FROM users u
+                                            INNER JOIN fees f ON u.id_fee = f.id_fee
+
+                                            -- Filtramos por los usuarios que registraron un pago ANUAL en la fecha y método específico
+                                            INNER JOIN (
+                                                SELECT id_user
+                                                FROM (
+                                                    SELECT aph.id_payment, ap.id_user 
+                                                    FROM annual_payments_history aph
+                                                    JOIN annual_payments ap ON aph.id_payment = ap.id_payment
+                                                    WHERE aph.pay_date = '${value}' AND aph.is_electronic = false
+                                                    ORDER BY aph.id_annual_payment DESC
+                                                ) AS sub_pagos_anuales
+                                                GROUP BY id_user 
+                                            ) pagos_dia ON u.id_user = pagos_dia.id_user
+                                            
+                                            -- Buscamos el último registro mensual incompleto para mostrar como información adicional
+                                            LEFT JOIN (
+                                                SELECT m1.*
+                                                FROM monthly_payments m1
+                                                WHERE m1.is_complete = 0
+                                                AND m1.id_payment = (
+                                                    SELECT MAX(m2.id_payment) 
+                                                    FROM monthly_payments m2 
+                                                    WHERE m2.id_user = m1.id_user AND m2.is_complete = 0
+                                                )
+                                            ) m ON u.id_user = m.id_user
+                                            
+                                            -- Buscamos el último registro anual incompleto (podría ser el que acaba de pagar si fue parcial)
+                                            LEFT JOIN (
+                                                SELECT a1.*
+                                                FROM annual_payments a1
+                                                WHERE a1.is_complete = 0
+                                                AND a1.id_payment = (
+                                                    SELECT MAX(a2.id_payment) 
+                                                    FROM annual_payments a2 
+                                                    WHERE a2.id_user = a1.id_user AND a2.is_complete = 0
+                                                )
+                                            ) a ON u.id_user = a.id_user
+                                            WHERE u.user_status = true;`;
+
+				const [rows, fields] = await this.database.execute(sqlAnnualDateModified);
+				return rows;
+			} else if (search === "annual_pay_date_electronic") {
+				const sqlAnnualDateModified = `SELECT 
+                                                u.id_user, 
+                                                u.first_name, 
+                                                u.last_name, 
+                                                u.dni, 
+                                                f.fee_descr,
+                                                f.amount AS fee_month,
+                                                (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
+
+                                                -- Datos del último pago mensual incompleto
+                                                m.amount AS last_unpaid_month_amount,
+                                                m.month_paid AS month_paid,
+                                                m.year_paid AS year_paid,
+
+                                                -- Datos del último pago anual incompleto
+                                                a.amount AS annual_pending_amount,
+                                                a.year_paid AS annual_pending_year
+
+                                            FROM users u
+                                            INNER JOIN fees f ON u.id_fee = f.id_fee
+
+                                            -- Filtramos por los usuarios que registraron un pago ANUAL en la fecha y método específico
+                                            INNER JOIN (
+                                                SELECT id_user
+                                                FROM (
+                                                    SELECT aph.id_payment, ap.id_user 
+                                                    FROM annual_payments_history aph
+                                                    JOIN annual_payments ap ON aph.id_payment = ap.id_payment
+                                                    WHERE aph.pay_date = '${value}' AND aph.is_electronic = true
+                                                    ORDER BY aph.id_annual_payment DESC
+                                                ) AS sub_pagos_anuales
+                                                GROUP BY id_user 
+                                            ) pagos_dia ON u.id_user = pagos_dia.id_user
+                                            
+                                            -- Buscamos el último registro mensual incompleto para mostrar como información adicional
+                                            LEFT JOIN (
+                                                SELECT m1.*
+                                                FROM monthly_payments m1
+                                                WHERE m1.is_complete = 0
+                                                AND m1.id_payment = (
+                                                    SELECT MAX(m2.id_payment) 
+                                                    FROM monthly_payments m2 
+                                                    WHERE m2.id_user = m1.id_user AND m2.is_complete = 0
+                                                )
+                                            ) m ON u.id_user = m.id_user
+                                            
+                                            -- Buscamos el último registro anual incompleto (podría ser el que acaba de pagar si fue parcial)
+                                            LEFT JOIN (
+                                                SELECT a1.*
+                                                FROM annual_payments a1
+                                                WHERE a1.is_complete = 0
+                                                AND a1.id_payment = (
+                                                    SELECT MAX(a2.id_payment) 
+                                                    FROM annual_payments a2 
+                                                    WHERE a2.id_user = a1.id_user AND a2.is_complete = 0
+                                                )
+                                            ) a ON u.id_user = a.id_user
+                                            WHERE u.user_status = true;`;
+
+				const [rows, fields] = await this.database.execute(sqlAnnualDateModified);
 				return rows;
 			} else {
 				let valueWilcard = value + "%";
-				const sql5 = `SELECT 
+				const sqlModified = `SELECT 
                         u.id_user, 
                         u.first_name, 
                         u.last_name, 
                         u.dni, 
-                        u.register_date, 
-                        u.user_status, 
                         f.fee_descr,
                         f.amount AS fee_month,
                         (SELECT f2.amount FROM fees f2 WHERE f2.id_fee = 10) AS fee_annual,
-                        
-                        -- Última cuota mensual impaga
-                        mp.year_paid AS last_unpaid_month_year,
-                        mp.month_paid AS last_unpaid_month,
-                        mp.amount AS last_unpaid_month_amount,
-                        
-                        -- Último pago anual impago
-                        ap.year_paid AS last_unpaid_year,
-                        ap.amount AS last_unpaid_amount
+
+                        -- Datos del último pago mensual incompleto
+                        m.amount AS last_unpaid_month_amount,
+                        m.month_paid AS month_paid,
+                        m.year_paid AS year_paid,
+
+                        -- Datos del último pago anual incompleto
+                        a.amount AS annual_pending_amount,
+                        a.year_paid AS annual_pending_year
 
                     FROM users u
-                    JOIN fees f ON u.id_fee = f.id_fee
+                    INNER JOIN fees f ON u.id_fee = f.id_fee
 
-                    -- Unión con pagos mensuales
-                    LEFT JOIN monthly_payments mp 
-                        ON u.id_user = mp.id_user 
-                        AND mp.is_complete = 0
-                        AND (mp.year_paid, mp.month_paid) = (
-                            SELECT mp2.year_paid, mp2.month_paid
-                            FROM monthly_payments mp2
-                            WHERE mp2.id_user = u.id_user 
-                            AND mp2.is_complete = 0
-                            ORDER BY mp2.year_paid DESC, mp2.month_paid DESC
-                            LIMIT 1
+                    -- Join para el último pago mensual incompleto
+                    LEFT JOIN (
+                        SELECT m1.*
+                        FROM monthly_payments m1
+                        WHERE m1.is_complete = 0
+                        AND m1.id_payment = (
+                            SELECT MAX(m2.id_payment) 
+                            FROM monthly_payments m2 
+                            WHERE m2.id_user = m1.id_user AND m2.is_complete = 0
                         )
-
-                    -- Unión con pagos anuales
-                    LEFT JOIN annual_payments ap 
-                        ON u.id_user = ap.id_user 
-                        AND ap.is_complete = 0
-                        AND ap.year_paid = (
-                            SELECT MAX(ap2.year_paid)
-                            FROM annual_payments ap2
-                            WHERE ap2.id_user = u.id_user 
-                            AND ap2.is_complete = 0
+                    ) m ON u.id_user = m.id_user
+                    
+                    -- Join para el último pago anual incompleto
+                    LEFT JOIN (
+                        SELECT a1.*
+                        FROM annual_payments a1
+                        WHERE a1.is_complete = 0
+                        AND a1.id_payment = (
+                            SELECT MAX(a2.id_payment) 
+                            FROM annual_payments a2 
+                            WHERE a2.id_user = a1.id_user AND a2.is_complete = 0
                         )
+                    ) a ON u.id_user = a.id_user
+                    WHERE u.${search} LIKE '${valueWilcard}' AND u.user_status = true;`;
 
-                    WHERE u.${search} LIKE '${valueWilcard}' AND u.user_status = 1`;
-
-				const [rows, fields] = await this.database.execute(sql5);
+				const [rows, fields] = await this.database.execute(sqlModified);
 				return rows;
 			}
 		} catch (err) {
@@ -292,10 +424,7 @@ export default class UsersRepository {
                     WHERE u.user_status = 1`;
 
 		try {
-			if (search === "TODO") {
-				const [rows, fields] = await this.database.execute(sql);
-				return rows;
-			} else if (!value) {
+			if (search === "TODO" || !value) {
 				const [rows, fields] = await this.database.execute(sql);
 				return rows;
 			} else if (value === "0" && search === "user_status") {
@@ -331,7 +460,7 @@ export default class UsersRepository {
                     f.id_fee,
                     f.fee_descr
                     FROM users u JOIN fees f ON u.id_fee = f.id_fee 
-                    WHERE u.${search} LIKE '${valueWilcard}' AND u.user_status = 1`;
+                    WHERE u.${search} LIKE '${valueWilcard}'`;
 
 				const [rows, fields] = await this.database.execute(sql3);
 				return rows;

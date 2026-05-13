@@ -7,11 +7,47 @@ import { userPassJwt } from "../middlewares/userPassJwt.js";
 const eventsController = new EventsController(eventsService);
 const router = Router();
 
-router.get("/:eid", userPassJwt(), handlePolicies(["PUBLIC"]), eventsController.getEvent);
-router.get("/", userPassJwt(), handlePolicies(["PUBLIC"]), eventsController.getEvents);
-router.delete("/:eid", userPassJwt(), handlePolicies(["ADMIN"]), eventsController.deleteEvent);
-router.delete("/", userPassJwt(), handlePolicies(["ADMIN"]), eventsController.deleteAllEvents);
-router.put("/:eid", userPassJwt(), handlePolicies(["ADMIN"]), eventsController.updateEvent);
-router.post("/", userPassJwt(), handlePolicies(["ADMIN"]), eventsController.addEvent);
+router.get(
+	"/:eid",
+	userPassJwt(),
+	handlePolicies(["PUBLIC"]),
+	eventsController.getEvent,
+);
+router.get(
+	"/",
+	userPassJwt(),
+	handlePolicies(["PUBLIC"]),
+	eventsController.getEvents,
+);
+router.delete(
+	"/:eid",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	eventsController.deleteEvent,
+);
+router.delete(
+	"/",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	eventsController.deleteAllEvents,
+);
+router.put(
+	"/:eid",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	eventsController.updateEvent,
+);
+router.put(
+	"/changeeventstatus/:eid",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	eventsController.changeEventStatus,
+);
+router.post(
+	"/",
+	userPassJwt(),
+	handlePolicies(["ADMIN"]),
+	eventsController.addEvent,
+);
 
 export default router;
